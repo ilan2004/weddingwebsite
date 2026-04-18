@@ -430,6 +430,7 @@ section {
 
 .hero-header-wrap {
   width: 42%;
+  opacity: 0;
 }
 
 .hero-eyebrow {
@@ -441,10 +442,13 @@ section {
 
 .hero-copy-wrap {
   width: 50%;
+  opacity: 0;
 }
 
 .hero-copy h3 {
-  opacity: 0;
+  font-family: "Inter", sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.01rem;
 }
 
 .hero-actions {

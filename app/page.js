@@ -108,7 +108,7 @@ export default function Home() {
     let ctx;
     let lenis;
     let tickerFn;
-    let heroCopySplit;
+    let taglineSplit;
     let isHeroCopyHidden = false;
     let disposed = false;
 
@@ -134,44 +134,46 @@ export default function Home() {
       gsap.ticker.lagSmoothing(0);
 
       ctx = gsap.context(() => {
-        heroCopySplit = SplitText.create(".hero-copy h3", {
-          type: "words",
-          wordsClass: "word",
-        });
+        gsap.fromTo(".hero-header-wrap", 
+          { y: 35, opacity: 0 },
+          { 
+            y: 0, 
+            opacity: 1, 
+            duration: 1.2, 
+            ease: "power3.out", 
+            delay: 0.3 
+          }
+        );
+
+        gsap.fromTo(".hero-btn", 
+          { y: 20, opacity: 0 },
+          { 
+            y: 0, 
+            opacity: 1, 
+            duration: 0.8, 
+            stagger: 0.15, 
+            ease: "power3.out", 
+            delay: 0.7 
+          }
+        );
 
         ScrollTrigger.create({
           trigger: ".hero",
           start: "top top",
-          end: `+${window.innerHeight * 3.5}px`,
+          end: `+${window.innerHeight * 2.8}px`,
           pin: true,
           pinSpacing: false,
           scrub: 1,
           onUpdate: (self) => {
             const progress = self.progress;
 
-            const heroHeaderProgress = Math.min(progress / 0.2, 1);
-            gsap.set(".hero-header", { yPercent: -heroHeaderProgress * 100 });
+            const heroHeaderProgress = Math.min(progress / 0.15, 1);
+            gsap.set(".hero-header", { yPercent: -heroHeaderProgress * 100, opacity: 1 - progress * 4 });
 
-            const heroWordsProgress = Math.max(
-              0,
-              Math.min((progress - 0.12) / 0.18, 1),
-            );
-            const totalWords = heroCopySplit.words.length;
+            const taglineOpacity = Math.max(0, Math.min((progress - 0.05) / 0.15, 1));
+            gsap.set(".hero-copy-wrap", { opacity: taglineOpacity });
 
-            heroCopySplit.words.forEach((word, i) => {
-              const wordStart = i / totalWords;
-              const wordEnd = (i + 1) / totalWords;
-              const wordOpacity = Math.max(
-                0,
-                Math.min((heroWordsProgress - wordStart) / (wordEnd - wordStart), 1),
-              );
-              gsap.set(word, { opacity: wordOpacity });
-            });
-
-            const actionsOpacity = Math.max(
-              0,
-              Math.min((heroWordsProgress - 0.4) / 0.4, 1)
-            );
+            const actionsOpacity = Math.max(0, Math.min((progress - 0.2) / 0.15, 1));
             gsap.set(".hero-actions", { 
               opacity: actionsOpacity,
               y: (1 - actionsOpacity) * 20 
@@ -276,7 +278,6 @@ export default function Home() {
 
     return () => {
       disposed = true;
-      heroCopySplit?.revert();
       if (tickerFn && gsapRef?.ticker) gsapRef.ticker.remove(tickerFn);
       lenis?.destroy();
       ctx?.revert();
