@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 const faqSchema = {
   "@context": "https://schema.org",
@@ -64,9 +65,18 @@ const trackEvent = (eventName, payload = {}) => {
 export default function Home() {
   const [inquirySent, setInquirySent] = useState(false);
   const [isNavbarSolid, setIsNavbarSolid] = useState(false);
-  const [heroImgSrc, setHeroImgSrc] = useState("/hero1.png");
+  const [activeHeroIndex, setActiveHeroIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (isMenuOpen || isModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
+    }
+  }, [isMenuOpen, isModalOpen]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);
@@ -75,19 +85,16 @@ export default function Home() {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const heroImages = isMobile 
+    ? ["/hero1mobile.png", "/hero2mobile.png", "/hero3mobile.png"] 
+    : ["/hero1.png", "/hero2.png", "/hero3.png"];
+
   useEffect(() => {
-    const images = isMobile 
-      ? ["/hero1mobile.png", "/hero2mobile.png", "/hero3mobile.png"] 
-      : ["/hero1.png", "/hero2.png", "/hero3.png"];
-    
-    setHeroImgSrc(images[0]);
-    let currentIndex = 0;
     const interval = setInterval(() => {
-      currentIndex = (currentIndex + 1) % images.length;
-      setHeroImgSrc(images[currentIndex]);
-    }, 2000);
+      setActiveHeroIndex((prev) => (prev + 1) % heroImages.length);
+    }, 4000); // Increased interval for better appreciation of smooth transition
     return () => clearInterval(interval);
-  }, [isMobile]);
+  }, [heroImages.length]);
 
   useEffect(() => {
     const onScroll = () => setIsNavbarSolid(window.scrollY > 20);
@@ -142,12 +149,12 @@ export default function Home() {
           onUpdate: (self) => {
             const progress = self.progress;
 
-            const heroHeaderProgress = Math.min(progress / 0.29, 1);
+            const heroHeaderProgress = Math.min(progress / 0.2, 1);
             gsap.set(".hero-header", { yPercent: -heroHeaderProgress * 100 });
 
             const heroWordsProgress = Math.max(
               0,
-              Math.min((progress - 0.29) / 0.21, 1),
+              Math.min((progress - 0.12) / 0.18, 1),
             );
             const totalWords = heroCopySplit.words.length;
 
@@ -163,7 +170,7 @@ export default function Home() {
 
             const actionsOpacity = Math.max(
               0,
-              Math.min((heroWordsProgress - 0.5) / 0.5, 1)
+              Math.min((heroWordsProgress - 0.4) / 0.4, 1)
             );
             gsap.set(".hero-actions", { 
               opacity: actionsOpacity,
@@ -333,38 +340,101 @@ export default function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
 
-      <nav className={`navbar ${isNavbarSolid ? "is-scrolled" : ""}`}>
-        <a className="brand" href="#home">
+      <nav className={`navbar ${isNavbarSolid ? "is-scrolled" : ""} ${isMenuOpen ? "menu-active" : ""}`}>
+        <a className="brand" href="#home" onClick={() => setIsMenuOpen(false)}>
           Eventora
         </a>
         <div className="nav-links">
           <a href="#about">About</a>
           <a href="#services">Services</a>
+          <a href="/portfolio">Portfolio</a>
           <a href="#showcase">Events</a>
           <a href="#contact">Contact</a>
         </div>
-        <a
-          className="nav-cta"
-          onClick={(e) => {
-            e.preventDefault();
-            openModal();
-            trackEvent("cta_click", { location: "navbar" });
-          }}
-        >
-          Check Date Availability
-        </a>
+        <div className="nav-actions">
+          <a
+            className="nav-cta"
+            onClick={(e) => {
+              e.preventDefault();
+              openModal();
+              trackEvent("cta_click", { location: "navbar" });
+            }}
+          >
+            Check Date Availability
+          </a>
+          <button 
+            className={`menu-toggle ${isMenuOpen ? "is-active" : ""}`}
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label="Toggle Menu"
+          >
+            <span></span>
+            <small>{isMenuOpen ? "CLOSE" : "MENU"}</small>
+          </button>
+        </div>
       </nav>
+
+      {/* ── Menu Overlay ── */}
+      <div className={`menu-overlay ${isMenuOpen ? "is-open" : ""}`}>
+        <div className="menu-container">
+          <div className="menu-content">
+            <div className="menu-nav">
+              <div className="menu-nav-item">
+                <a href="#home" onClick={() => setIsMenuOpen(false)}><span>01</span> Home</a>
+              </div>
+              <div className="menu-nav-item">
+                <a href="#about" onClick={() => setIsMenuOpen(false)}><span>02</span> About</a>
+              </div>
+              <div className="menu-nav-item">
+                <a href="#services" onClick={() => setIsMenuOpen(false)}><span>03</span> Services</a>
+              </div>
+              <div className="menu-nav-item">
+                <a href="/portfolio" onClick={() => setIsMenuOpen(false)}><span>04</span> Portfolio</a>
+              </div>
+              <div className="menu-nav-item">
+                <a href="#showcase" onClick={() => setIsMenuOpen(false)}><span>05</span> Stories</a>
+              </div>
+              <div className="menu-nav-item">
+                <a href="#contact" onClick={() => setIsMenuOpen(false)}><span>06</span> Contact</a>
+              </div>
+            </div>
+            
+            <div className="menu-footer">
+              <div className="menu-footer-col">
+                <p className="menu-footer-label">Social</p>
+                <div className="menu-footer-links">
+                  <a href="#" target="_blank">Instagram</a>
+                  <a href="#" target="_blank">WhatsApp</a>
+                </div>
+              </div>
+              <div className="menu-footer-col">
+                <p className="menu-footer-label">Connect</p>
+                <div className="menu-footer-links">
+                  <a href="mailto:hello@eventora.com">hello@eventora.com</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="menu-bg"></div>
+      </div>
 
       <section className="hero" id="home">
         <div className="hero-img">
-          <img 
-            src={heroImgSrc} 
-            alt="Kerala wedding couple celebration moment" 
-            style={{ 
-              transition: "opacity 0.5s ease-in-out",
-              objectPosition: isMobile && heroImgSrc === "/hero2mobile.png" ? "80% center" : "center" 
-            }} 
-          />
+          {heroImages.map((src, index) => (
+            <Image 
+              key={src}
+              src={src} 
+              alt="Experience authentic Kerala weddings" 
+              className={index === activeHeroIndex ? "active" : ""}
+              fill
+              priority={index === 0}
+              sizes="100vw"
+              style={{ 
+                objectFit: "cover",
+                objectPosition: isMobile && src.includes("hero2mobile") ? "80% center" : "center" 
+              }} 
+            />
+          ))}
         </div>
         <div className="hero-header">
           <div className="hero-header-wrap">
@@ -408,58 +478,58 @@ export default function Home() {
         <div className="about-images">
           <div className="about-imgs-col" id="about-imgs-col-1">
             <div className="img">
-              <img src="/malabar.png" alt="Kerala wedding floral details" />
+              <Image src="/malabar.png" alt="Kerala wedding floral details" width={150} height={150} />
             </div>
             <div className="img">
-              <img src="/port4.png" alt="Kerala wedding reception table setup" />
+              <Image src="/port4.png" alt="Kerala wedding reception table setup" width={150} height={150} />
             </div>
             <div className="img">
-              <img src="/malab1.png" alt="Kerala wedding decor styling" />
+              <Image src="/malab1.png" alt="Kerala wedding decor styling" width={150} height={150} />
             </div>
             <div className="img">
-              <img src="/bride.png" alt="Bride portrait in Kerala wedding attire" />
+              <Image src="/bride.png" alt="Bride portrait in Kerala wedding attire" width={150} height={150} />
             </div>
           </div>
           <div className="about-imgs-col" id="about-imgs-col-2">
             <div className="img">
-              <img src="/malab2.png" alt="Planner coordinating event timeline" />
+              <Image src="/malab2.png" alt="Planner coordinating event timeline" width={150} height={150} />
             </div>
             <div className="img">
-              <img src="/port3.png" alt="Kerala wedding head table styling" />
+              <Image src="/port3.png" alt="Kerala wedding head table styling" width={150} height={150} />
             </div>
             <div className="img">
-              <img src="/port2.png" alt="Kerala wedding venue atmosphere" />
+              <Image src="/port2.png" alt="Kerala wedding venue atmosphere" width={150} height={150} />
             </div>
             <div className="img">
-              <img src="/img8.jpg" alt="Bouquet details" />
+              <Image src="/malab1.png" alt="Bouquet details" width={150} height={150} />
             </div>
           </div>
           <div className="about-imgs-col" id="about-imgs-col-3">
             <div className="img">
-              <img src="/malab3.png" alt="Wedding rings detail for Kerala ceremony" />
+              <Image src="/malab3.png" alt="Wedding rings detail for Kerala ceremony" width={150} height={150} />
             </div>
             <div className="img">
-              <img src="/img10.jpg" alt="Kerala wedding reception lighting setup" />
+              <Image src="/port5.png" alt="Kerala wedding reception lighting setup" width={150} height={150} />
             </div>
             <div className="img">
-              <img src="/port1.png" alt="Wedding dessert and cake display" />
+              <Image src="/port1.png" alt="Wedding dessert and cake display" width={150} height={150} />
             </div>
             <div className="img">
-              <img src="/img12.jpg" alt="Guests celebrating at Kerala wedding" />
+              <Image src="/malab4.png" alt="Guests celebrating at Kerala wedding" width={150} height={150} />
             </div>
           </div>
           <div className="about-imgs-col" id="about-imgs-col-4">
             <div className="img">
-              <img src="/stage.png" alt="Traditional Kerala ceremony stage design" />
+              <Image src="/stage.png" alt="Traditional Kerala ceremony stage design" width={150} height={150} />
             </div>
             <div className="img">
-              <img src="/malab4.png" alt="Event planning team at work" />
+              <Image src="/malab4.png" alt="Event planning team at work" width={150} height={150} />
             </div>
             <div className="img">
-              <img src="/img15.jpg" alt="Kerala wedding invitation and stationery" />
+              <Image src="/port4.png" alt="Kerala wedding invitation and stationery" width={150} height={150} />
             </div>
             <div className="img">
-              <img src="/img16.jpg" alt="Kerala wedding couple celebration moment" />
+              <Image src="/hero1.png" alt="Kerala wedding couple celebration moment" width={150} height={150} />
             </div>
           </div>
         </div>
@@ -527,7 +597,7 @@ export default function Home() {
         </div>
 
         <div className="services-banner reveal-up">
-          <img src="/port4.png" alt="Kerala wedding ceremony in golden light" />
+          <Image src="/port4.png" alt="Kerala wedding ceremony in golden light" fill sizes="(max-width: 1400px) 100vw, 1400px" style={{ objectFit: "cover", objectPosition: "center 30%" }} />
           <div className="services-banner-copy">
             <h3>Every wedding is designed around your family customs and Kerala aesthetics.</h3>
             <a
@@ -614,7 +684,13 @@ export default function Home() {
 
         <div className="showcase-primary reveal-up">
           <div className="showcase-primary-img">
-            <img src="/port1.png" alt="The Nair–Menon wedding at Kumarakom Lake Resort" />
+            <Image 
+              src="/port1.png" 
+              alt="The Nair–Menon wedding at Kumarakom Lake Resort" 
+              fill 
+              sizes="(max-width: 768px) 100vw, 60vw"
+              style={{ objectFit: "cover" }}
+            />
           </div>
           <div className="showcase-primary-info">
             <span className="showcase-wedding-num" aria-hidden="true">01</span>
@@ -651,7 +727,13 @@ export default function Home() {
         <div className="showcase-secondary">
           <div className="showcase-secondary-item reveal-up">
             <div className="showcase-secondary-img">
-              <img src="/port4.png" alt="Destination beach ceremony at Kovalam" />
+              <Image 
+                src="/port4.png" 
+                alt="Destination beach ceremony at Kovalam" 
+                fill 
+                sizes="(max-width: 768px) 100vw, 40vw"
+                style={{ objectFit: "cover" }}
+              />
             </div>
             <div className="showcase-secondary-info">
               <span className="showcase-wedding-num" aria-hidden="true">02</span>
@@ -670,7 +752,13 @@ export default function Home() {
           </div>
           <div className="showcase-secondary-item reveal-up">
             <div className="showcase-secondary-img">
-              <img src="/malab1.png" alt="Heritage hall reception in Kochi" style={{ objectPosition: "center 20%" }} />
+              <Image 
+                src="/malab1.png" 
+                alt="Heritage hall reception in Kochi" 
+                fill 
+                sizes="(max-width: 768px) 100vw, 40vw"
+                style={{ objectFit: "cover", objectPosition: "center 20%" }} 
+              />
             </div>
             <div className="showcase-secondary-info">
               <span className="showcase-wedding-num" aria-hidden="true">03</span>
